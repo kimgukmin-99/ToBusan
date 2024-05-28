@@ -36,6 +36,7 @@ typedef struct {
 
 typedef struct {
 	int x;
+	bool turn = false;
 } Zombie;
 
 
@@ -46,30 +47,31 @@ int set_ma_stamina(int, int); //마동석 체력 결정
 int set_probability(int, int); // 확률 설정
 void print_board(int, Madongseok *, Citizen*, Zombie*); //보드판 출력
 void set_position(int, Madongseok*, Citizen*, Zombie*); //초기위치 설정
+void move_phase(int,int,  Madongseok*, Citizen*, Zombie*); //이동페이즈
+void action_phase();//행동페이즈
 
 
 
 
 int main()
 {
+	srand((unsigned)time(NULL));
 	print_intro();
-	int train_length; //기차길이 입력받기 위한 변수
-	int madongseok_stamina; //마동석 스테미나 입력받는 변수
-	int propability; //확률입력하는 변수
-
+	//마동석 시민 좀비 생성
 	Madongseok ma{};
 	Citizen cit{};
 	Zombie zom{};
-
-
-	train_length = set_train_length(LEN_MIN, LEN_MAX);
+	//입력받기
+	int train_length = set_train_length(LEN_MIN, LEN_MAX);
 	ma.stamina = set_ma_stamina(STM_MIN, STM_MAX);
-	propability = set_probability(PROB_MIN, PROB_MAX);
+	int propability = set_probability(PROB_MIN, PROB_MAX);
+	//초기세팅 및 초기 기차상태 출력
 	set_position(train_length, &ma, &cit, &zom);
 	print_board(train_length, &ma, &cit, &zom);
 
 	while (1)
 	{
+		int random = rand() % 100 + 1; // 1 ~ 100
 		break;
 
 	}
@@ -184,3 +186,18 @@ void set_position(int length, Madongseok *ma, Citizen *cit, Zombie *zom) {
 	cit->x = length - 7;
 	zom->x = length - 4;
 };
+void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) {
+	//시민이동
+	if (random > pro) {
+		cit->x--;
+	};
+	
+	if (zom->turn) {
+		//좀비 turn에 따라서 이동하고 말고 결정해야함
+	}
+	else {
+
+	}
+
+	
+}
