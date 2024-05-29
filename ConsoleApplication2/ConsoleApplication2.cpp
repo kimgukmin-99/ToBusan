@@ -72,6 +72,7 @@ int main()
 	while (1)
 	{
 		int random = rand() % 100 + 1; // 1 ~ 100
+		move_phase(random,propability, &ma, &cit, &zom); //이동페이즈 구현
 		break;
 
 	}
@@ -188,16 +189,38 @@ void set_position(int length, Madongseok *ma, Citizen *cit, Zombie *zom) {
 };
 void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) {
 	//시민이동
+	int cit_x = cit->x;
+	int zom_x = zom->x;
 	if (random > pro) {
 		cit->x--;
-	};
-	
+	}
 	if (zom->turn) {
 		//좀비 turn에 따라서 이동하고 말고 결정해야함
+		zom->x--;
 	}
-	else {
+	zom->turn = !(zom->turn);
+	printf("citizen: %d -> %d (aggro: %d)\n", cit_x, cit->x, cit->aggro);
+	printf("zombie: %d -> %d\n", zom_x, zom->x);
 
+	while (1){
+		int ma_move;
+		printf("madongseok move(0:stay, 1:left)>> ");
+		scanf_s("%d", &ma_move);
+		if (ma_move == 1) {
+			ma->x--;
+			printf("madongseok: move %d(aggro: %d, stamina: %d)", ma->x, ma->aggro, ma->stamina);
+			break;
+		}
+		else if (ma_move == 0) {
+			printf("madongseok: move %d(aggro: %d, stamina: %d)", ma->x, ma->aggro, ma->stamina);
+			break;
+		}
+		else {
+			continue;
+		}
 	}
+	
+	
 
 	
 }
