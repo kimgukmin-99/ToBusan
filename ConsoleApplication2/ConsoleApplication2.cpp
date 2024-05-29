@@ -48,15 +48,16 @@ int set_probability(int, int); // 확률 설정
 void print_board(int, Madongseok *, Citizen*, Zombie*); //보드판 출력
 void set_position(int, Madongseok*, Citizen*, Zombie*); //초기위치 설정
 void move_phase(int,int,  Madongseok*, Citizen*, Zombie*); //이동페이즈
-void action_phase();//행동페이즈
-int set_aggro(int, int, int);//어그로 관리 함수
-
+void action_phase(Madongseok*, Citizen*, Zombie*);//행동페이즈
+int check_aggro(int, int, int);//어그로 관리 함수
+void set_aggro(Madongseok*, Citizen*);//어그로 초기설정
 int train_length;
+int propability;
 
 int main()
 {
 	srand((unsigned)time(NULL));
-	print_intro();
+	//print_intro();
 	//마동석 시민 좀비 생성
 	Madongseok ma{};
 	Citizen cit{};
@@ -64,8 +65,9 @@ int main()
 	//입력받기
 	train_length = set_train_length(LEN_MIN, LEN_MAX);
 	ma.stamina = set_ma_stamina(STM_MIN, STM_MAX);
-	int propability = set_probability(PROB_MIN, PROB_MAX);
+	propability = set_probability(PROB_MIN, PROB_MAX);
 	//초기세팅 및 초기 기차상태 출력
+	set_aggro(&ma, &cit);
 	set_position(train_length, &ma, &cit, &zom);
 	print_board(train_length, &ma, &cit, &zom);
 	printf("==============Let's Go Game!!=============\n\n");
@@ -74,9 +76,7 @@ int main()
 		int random = rand() % 100 + 1; // 1 ~ 100
 		move_phase(random,propability, &ma, &cit, &zom); //이동페이즈 구현
 		//행동페이즈 구현해야댐
-
-
-
+		action_phase(&ma, &cit, &zom); //행동 페이즈 구현
 	}
 	return 0;
 }
@@ -155,14 +155,14 @@ int set_probability(int min , int max) {
 		}
 	}
 }
-int set_aggro(int aggro, int min, int max) {
+int check_aggro(int aggro, int min, int max) {
 	if (aggro > max) {
-		aggro--;
-		return aggro;
+		
+		return max;
 	}
 	else if (aggro < min) {
-		aggro++;
-		return aggro;
+
+		return min;
 	}
 	else {
 		return aggro;
@@ -206,6 +206,7 @@ void set_position(int length, Madongseok *ma, Citizen *cit, Zombie *zom) {
 };
 void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) {
 	//시민이동
+	printf("===========Start Move Phase===========\n\n");
 	int cit_x = cit->x;
 	int zom_x = zom->x;
 	int cit_aggro = cit->aggro;
@@ -213,19 +214,25 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 	if (random > pro) {
 		cit->x--;
 		cit->aggro++;
-		cit->aggro = set_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
+		cit->aggro = check_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
 	}
 	else {
 		cit->aggro--;
-		cit->aggro = set_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
+		cit->aggro = check_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
 	}
 	//좀비 turn에 따라서 이동하고 말고 결정해야함
 	if (zom->turn) {
 		if (cit->aggro >= ma->aggro) {
 			zom->x--;
+			if (zom->x == cit->x) {
+				zom->x++;
+			}
 		}
 		else {
 			zom->x++;
+			if (zom->x == ma->x) {
+				zom->x--;
+			}
 		}
 		
 	}
@@ -241,12 +248,21 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 
 	while (1){
 		int ma_move;
-		printf("madongseok move(0:stay, 1:left)>> ");
-		scanf_s("%d", &ma_move);
+		if (ma->x - 1 == zom->x) {
+			printf("madongseok move(0:stay)>> ");
+			scanf_s("%d", &ma_move);
+			if (ma_move != 0) {
+				continue;
+			}
+		}
+		else {
+			printf("madongseok move(0:stay, 1:left)>> ");
+			scanf_s("%d", &ma_move);
+		}
 		if (ma_move == 1) {
 			ma->x--;
 			ma->aggro++;
-			ma->aggro = set_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+			ma->aggro = check_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
 			print_board(train_length, ma, cit, zom);
 			printf("madongseok: move %d(aggro: %d -> %d, stamina: %d)\n\n", ma->x, ma_aggro, ma->aggro, ma->stamina);
 			break;
@@ -254,7 +270,7 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 		else if (ma_move == 0) {
 			print_board(train_length, ma, cit, zom);
 			ma->aggro--;
-			ma->aggro = set_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+			ma->aggro = check_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
 			printf("madongseok: stay %d(aggro: %d -> %d, stamina: %d)\n\n", ma->x, ma_aggro,ma->aggro, ma->stamina);
 			break;
 		}
@@ -265,4 +281,130 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 
 
 	printf("===========End Move Phase===========\n\n");
+}
+void set_aggro(Madongseok *ma, Citizen *cit) {
+	ma->aggro = 1;
+	cit->aggro = 1;
+}
+void action_phase(Madongseok *ma, Citizen* cit, Zombie* zom) {
+
+	printf("==============ACTION PHASE START!!=============\n\n");
+	if (cit->x == 0) {
+		printf("YOU WIN!...");
+		exit(-1);
+	}
+	printf("citizen does nothing.\n");
+	if (zom->x-1 == cit->x && zom->x + 1 == ma->x) {
+		if (cit->aggro >= ma->aggro) {
+			//둘다 인접하고 어그로도 같을경우도 생각해서 함
+			printf("GAME OVER! citizen dead...\n");
+			exit(-1);
+		}
+		else {
+			printf("zombie attacked madongseok (aggro: %d vs %d,  madongseok stamina: %d -> %d\n)", cit->aggro, ma->aggro, ma->stamina, ma->stamina - 1);
+			ma->stamina--;
+			if (ma->stamina <= STM_MIN) {
+				printf("GAME OVER! madongseok dead...\n");
+				exit(-1);
+			}
+		}
+	} //둘이 위치 같을경우부터
+	else if (zom->x - 1 == cit->x) {
+		printf("GAME OVER! citizen dead...");
+		exit(-1);
+	}
+	else if (zom->x + 1 == ma->x) {
+		ma->stamina--;
+		if (ma->stamina <= STM_MIN) {
+			printf("GAME OVER! madongseok dead...");
+			exit(-1);
+		}
+		else {
+			printf("zombie attacked madongseok, madongseok stamina: %d -> %d\n", ma->stamina + 1, ma->stamina);
+		}
+	}
+	else {
+		printf("zombie attacked nobody.\n");
+	}
+
+	if (ma->x - 1 > zom->x) {
+		while (1) {
+			printf("madongseok action(0: rest, 1: provoke)>> "); int action = scanf_s("%d", &action);
+			if (action == 0) {
+				int ma_aggro = ma->aggro;
+				int ma_stamina = ma->stamina;
+				ma->aggro--;
+				ma->aggro = check_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+				ma->stamina++;
+				ma->stamina = check_aggro(ma->stamina, STM_MIN, STM_MAX);
+				printf("madongseok rests...\n");
+				printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", ma->x, ma_aggro, ma->aggro, ma_stamina, ma->stamina);
+
+				break;
+			}
+			if (action == 1) {
+				int ma_aggro = ma->aggro;
+				ma->aggro = AGGRO_MAX;
+				printf("madongseok: %d (aggro: %d -> %d, stamina: %d)\n", ma->x, ma_aggro, ma->aggro, ma->stamina);
+				break;
+			}
+			else {
+				printf("다시 입력해주세요.\n");
+			}
+		}
+	}
+	else {
+		while (1) {
+			printf("madongseok action(0: rest, 1: provoke, 2: pull)>> "); 
+			int action;
+			scanf_s("%d", &action);
+			printf("%d\n", action);
+			if (action == 0) {
+				int ma_aggro = ma->aggro;
+				int ma_stamina = ma->stamina;
+				ma->aggro--;
+				ma->aggro = check_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+				ma->stamina++;
+				ma->stamina = check_aggro(ma->stamina, STM_MIN, STM_MAX);
+				printf("madongseok rests...\n");
+				printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", ma->x, ma_aggro, ma->aggro, ma_stamina, ma->stamina);
+
+				break;
+
+			}
+			else if (action == 1) {
+				int ma_aggro = ma->aggro;
+				ma->aggro = AGGRO_MAX;
+				printf("madongseok: %d (aggro: %d -> %d, stamina: %d)\n", ma->x, ma_aggro, ma->aggro, ma->stamina);
+				break;
+			}
+			else if(action == 2) {
+				int ma_aggro = ma->aggro;
+				int ma_stamina = ma->stamina;
+				ma->aggro = ma->aggro + 2;
+				ma->aggro = check_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+				ma->stamina--;
+				ma->stamina = check_aggro(ma->stamina, STM_MIN, STM_MAX);
+				int random = rand() % 100 + 1; // 1 ~ 100
+				if (random > propability) {
+					//성공시
+					zom->turn = 0;
+					printf("madongseok pulled zombie... Next turn, it can't move\n");
+					printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", ma->x, ma_aggro, ma->aggro, ma_stamina, ma->stamina);
+
+				}
+				else {
+					printf("madongseok failed to pull zombie");
+					printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n", ma->x, ma_aggro, ma->aggro, ma_stamina, ma->stamina);
+
+				}
+				break;
+			}
+			else {
+				printf("다시 입력해주세요.\n");
+			}
+		}
+		
+	}
+	printf("==============ACTION PHASE END!!=============\n\n");
 }
