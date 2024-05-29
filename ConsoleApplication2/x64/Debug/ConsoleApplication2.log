@@ -1,3 +1,2 @@
 ﻿  ConsoleApplication2.cpp
-C:\Users\gukmi\source\repos\ConsoleApplication2\ConsoleApplication2\ConsoleApplication2.cpp(57,6): warning C4101: 'madongseok_stamina' :참조되지 않은 지역 변수입니다.
   ConsoleApplication2.vcxproj -> C:\Users\gukmi\source\repos\ConsoleApplication2\x64\Debug\ConsoleApplication2.exe

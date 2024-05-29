@@ -36,7 +36,7 @@ typedef struct {
 
 typedef struct {
 	int x;
-	bool turn = false;
+	bool turn;
 } Zombie;
 
 
@@ -51,7 +51,7 @@ void move_phase(int,int,  Madongseok*, Citizen*, Zombie*); //이동페이즈
 void action_phase();//행동페이즈
 
 
-
+int train_length;
 
 int main()
 {
@@ -62,18 +62,20 @@ int main()
 	Citizen cit{};
 	Zombie zom{};
 	//입력받기
-	int train_length = set_train_length(LEN_MIN, LEN_MAX);
+	train_length = set_train_length(LEN_MIN, LEN_MAX);
 	ma.stamina = set_ma_stamina(STM_MIN, STM_MAX);
 	int propability = set_probability(PROB_MIN, PROB_MAX);
 	//초기세팅 및 초기 기차상태 출력
 	set_position(train_length, &ma, &cit, &zom);
 	print_board(train_length, &ma, &cit, &zom);
-
+	printf("==============Let's Go Game!!=============\n\n");
 	while (1)
 	{
 		int random = rand() % 100 + 1; // 1 ~ 100
 		move_phase(random,propability, &ma, &cit, &zom); //이동페이즈 구현
-		break;
+		//행동페이즈 구현해야댐
+
+
 
 	}
 	return 0;
@@ -186,11 +188,14 @@ void set_position(int length, Madongseok *ma, Citizen *cit, Zombie *zom) {
 	ma->x = length - 3;
 	cit->x = length - 7;
 	zom->x = length - 4;
+	zom->turn = 1;
+	
 };
 void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) {
 	//시민이동
 	int cit_x = cit->x;
 	int zom_x = zom->x;
+
 	if (random > pro) {
 		cit->x--;
 	}
@@ -199,8 +204,9 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 		zom->x--;
 	}
 	zom->turn = !(zom->turn);
+	print_board(train_length, ma, cit, zom);
 	printf("citizen: %d -> %d (aggro: %d)\n", cit_x, cit->x, cit->aggro);
-	printf("zombie: %d -> %d\n", zom_x, zom->x);
+	printf("zombie: %d -> %d\n\n", zom_x, zom->x);
 
 	while (1){
 		int ma_move;
@@ -208,19 +214,20 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 		scanf_s("%d", &ma_move);
 		if (ma_move == 1) {
 			ma->x--;
-			printf("madongseok: move %d(aggro: %d, stamina: %d)", ma->x, ma->aggro, ma->stamina);
+			print_board(train_length, ma, cit, zom);
+			printf("madongseok: move %d(aggro: %d, stamina: %d)\n\n", ma->x, ma->aggro, ma->stamina);
 			break;
 		}
 		else if (ma_move == 0) {
-			printf("madongseok: move %d(aggro: %d, stamina: %d)", ma->x, ma->aggro, ma->stamina);
+			print_board(train_length, ma, cit, zom);
+			printf("madongseok: move %d(aggro: %d, stamina: %d)\n\n", ma->x, ma->aggro, ma->stamina);
 			break;
 		}
 		else {
 			continue;
 		}
 	}
-	
-	
 
-	
+
+	printf("===========End Move Phase===========\n\n");
 }
