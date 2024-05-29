@@ -1,4 +1,11 @@
-﻿#include <stdio.h>
+﻿//1-1 ??여기다가 뭘 써야 하는지 모르겠다???
+//1-2
+//1-3
+//1-4
+//1-5
+
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <Windows.h>
