@@ -49,7 +49,7 @@ void print_board(int, Madongseok *, Citizen*, Zombie*); //보드판 출력
 void set_position(int, Madongseok*, Citizen*, Zombie*); //초기위치 설정
 void move_phase(int,int,  Madongseok*, Citizen*, Zombie*); //이동페이즈
 void action_phase();//행동페이즈
-
+int set_aggro(int, int, int);//어그로 관리 함수
 
 int train_length;
 
@@ -155,6 +155,19 @@ int set_probability(int min , int max) {
 		}
 	}
 }
+int set_aggro(int aggro, int min, int max) {
+	if (aggro > max) {
+		aggro--;
+		return aggro;
+	}
+	else if (aggro < min) {
+		aggro++;
+		return aggro;
+	}
+	else {
+		return aggro;
+	}
+}
 void print_board(int length, Madongseok *ma, Citizen *cit , Zombie *zom) {
 
 	for (int i = 1; i < length + 1; i++) {
@@ -195,18 +208,36 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 	//시민이동
 	int cit_x = cit->x;
 	int zom_x = zom->x;
-
+	int cit_aggro = cit->aggro;
+	int ma_aggro = ma->aggro;
 	if (random > pro) {
 		cit->x--;
+		cit->aggro++;
+		cit->aggro = set_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
 	}
+	else {
+		cit->aggro--;
+		cit->aggro = set_aggro(cit->aggro, AGGRO_MIN, AGGRO_MAX);
+	}
+	//좀비 turn에 따라서 이동하고 말고 결정해야함
 	if (zom->turn) {
-		//좀비 turn에 따라서 이동하고 말고 결정해야함
-		zom->x--;
+		if (cit->aggro >= ma->aggro) {
+			zom->x--;
+		}
+		else {
+			zom->x++;
+		}
+		
+	}
+	print_board(train_length, ma, cit, zom);
+	printf("citizen: %d -> %d (aggro: %d -> %d)\n", cit_x, cit->x, cit_aggro ,cit->aggro);
+	if (zom->turn) {
+		printf("zombie: %d -> %d\n\n", zom_x, zom->x);
+	}
+	else {
+		printf("zombie: %d -> %d (don't move turn)\n\n", zom_x, zom->x);
 	}
 	zom->turn = !(zom->turn);
-	print_board(train_length, ma, cit, zom);
-	printf("citizen: %d -> %d (aggro: %d)\n", cit_x, cit->x, cit->aggro);
-	printf("zombie: %d -> %d\n\n", zom_x, zom->x);
 
 	while (1){
 		int ma_move;
@@ -214,13 +245,17 @@ void move_phase(int random, int pro, Madongseok* ma, Citizen* cit, Zombie* zom) 
 		scanf_s("%d", &ma_move);
 		if (ma_move == 1) {
 			ma->x--;
+			ma->aggro++;
+			ma->aggro = set_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
 			print_board(train_length, ma, cit, zom);
-			printf("madongseok: move %d(aggro: %d, stamina: %d)\n\n", ma->x, ma->aggro, ma->stamina);
+			printf("madongseok: move %d(aggro: %d -> %d, stamina: %d)\n\n", ma->x, ma_aggro, ma->aggro, ma->stamina);
 			break;
 		}
 		else if (ma_move == 0) {
 			print_board(train_length, ma, cit, zom);
-			printf("madongseok: move %d(aggro: %d, stamina: %d)\n\n", ma->x, ma->aggro, ma->stamina);
+			ma->aggro--;
+			ma->aggro = set_aggro(ma->aggro, AGGRO_MIN, AGGRO_MAX);
+			printf("madongseok: stay %d(aggro: %d -> %d, stamina: %d)\n\n", ma->x, ma_aggro,ma->aggro, ma->stamina);
 			break;
 		}
 		else {
